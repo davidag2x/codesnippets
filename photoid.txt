@@ -1,0 +1,152 @@
+//Import data from Photo ID
+  $('#pat_memberentrygen #toolbar').append('<button class="btn btn-default toggler" id="btnScanPhotoID" name="scan" style="margin-right: 0px; margin-right: 5px;"><i class="fa fa-id-card-o"></i> Scan Photo ID</button>');
+  $('#pat_memberentrygen').append('<div id="PhotoIDModal" class="modal fade" role="dialog" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><form id="formID" method="post" action="submit" onsubmit="return false;"><div class="modal-header"><h3>Scan Photo ID</h3></div><div class="modal-body"><textarea id="inputPhotoIDData" rows="1" cols="1" style="margin-left: -400px;" /><span id="msgScan"></span></div><div id="ContentFooter" class="modal-footer"><button id="btnPhotoIDClose" data-dismiss="modal" aria-hidden="true" class="btn"><i class="fa fa-times"></i> Cancel</button></div></form></div></div></div>');
+  function ProcessPhotoID() {
+    //Close modal
+    $('#PhotoIDModal').modal('hide');
+    $('#PhotoIDModal').on('hidden.bs.modal', function () {
+      $('#msgScan').html('<h4>Scan Photo ID now...</h4>');
+    });
+    //Separate information into array
+    console.log($('#inputPhotoIDData').val());
+    var IDSegments = $('#inputPhotoIDData').val().split('\n');
+    
+    function toTitleCase(str)
+    //NEED TO MAKE THIS FUNCTION OPTIONAL
+    {
+      return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+    } 
+    //Fix city names that are incomplete
+    function FixCity(str) {
+      if (str == 'Lewisville') {
+        return 'Lewisville';
+      } else {
+        return str;
+      }
+    }
+    //Process data
+    if (IDSegments != '') {
+      var usrLastName,usrFirstName,usrBirth,mStop,usrMailingAddress,usrMailingCity,usrMailingState,usrMailingZip,usrPhysicalAddress,usrPhysicalCity,usrPhysicalState,usrPhysicalZip;
+      for (i = 0; i < IDSegments.length; ++i) {
+        if (IDSegments[i].startsWith('DCS')) {
+          usrLastName = toTitleCase(IDSegments[i].slice(3));
+          if (usrLastName.substring(0,2) == 'Mc') {
+            usrLastName = 'Mc' + usrLastName.substring(2,3).toUpperCase() + usrLastName.substring(3);
+          }
+          if (usrLastName.substring(0,3) == 'Mac') {
+            $('label[for="surname"]').siblings('span.required').after('<span style="background-color: yellow; color: red; margin-left: 5px;"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Check capitalization</span>');
+          }
+        }
+        if (IDSegments[i].startsWith('DAC')) {
+          usrFirstName = toTitleCase(IDSegments[i].slice(3));
+        }
+        if (IDSegments[i].startsWith('DAD')) {
+          usrFirstName += ' ' + toTitleCase(IDSegments[i].slice(3));
+        }
+        if (IDSegments[i].startsWith('DBB')) {
+          usrBirth = IDSegments[i].slice(3);
+          usrBirth = usrBirth.substring(0,2) + '/' + usrBirth.substring(2,4) + '/' + usrBirth.substring(4,8);
+        }
+        if (IDSegments[i].startsWith('DAG')) {
+          usrMailingAddress = toTitleCase(IDSegments[i].slice(3));
+        }
+        if (IDSegments[i].startsWith('DAH')) {
+          usrMailingAddress += ' ' + toTitleCase(IDSegments[i].slice(3));
+        }
+        if (IDSegments[i].startsWith('DAI')) {
+          usrMailingCity = FixCity(toTitleCase(IDSegments[i].slice(3)));
+        }
+        if (IDSegments[i].startsWith('DAJ')) {
+          usrMailingState = IDSegments[i].slice(3);
+        }
+        if (IDSegments[i].startsWith('DAK')) {
+          usrMailingZip = toTitleCase(IDSegments[i].slice(3,8));
+        }
+        if (IDSegments[i].startsWith('DAL')) {
+          usrPhysicalAddress = toTitleCase(IDSegments[i].slice(3));
+        }
+        if (IDSegments[i].startsWith('DAM')) {
+          usrPhysicalAddress += ' ' + toTitleCase(IDSegments[i].slice(3));
+        }
+        if (IDSegments[i].startsWith('DAN')) {
+          usrPhysicalCity = FixCity(toTitleCase(IDSegments[i].slice(3)));
+        }
+        if (IDSegments[i].startsWith('DAO')) {
+          usrPhysicalState = IDSegments[i].slice(3);
+        }
+        if (IDSegments[i].startsWith('DAP')) {
+          usrPhysicalZip = toTitleCase(IDSegments[i].slice(3,8));
+        }
+        if (IDSegments[i].startsWith('DAQ')) {
+                usrLicenseNumber = IDSegments[i].slice(3);
+            }
+
+      }
+      //Copy data to form fields
+      $('#surname').val(usrLastName).css('background-color','yellow');
+      $('#firstname').val(usrFirstName).css('background-color','yellow');
+      $('#dateofbirth').val(usrBirth).css('background-color','yellow');
+      $('#address').val(usrMailingAddress).css('background-color','yellow');
+      $('#city').val(usrMailingCity).css('background-color','yellow');
+      $('#state').val(usrMailingState).css('background-color','yellow');
+      $('#zipcode').val(usrMailingZip).css('background-color','yellow');
+      //If secondary address doesn't exist, it usually starts with @
+      if (typeof usrPhysicalAddress != 'undefined') {
+        $('#B_address').val(usrPhysicalAddress).css('background-color','yellow');
+        $('#B_city').val(usrPhysicalCity).css('background-color','yellow');
+        $('#B_state').val(usrPhysicalState).css('background-color','yellow');
+        $('#B_zipcode').val(usrPhysicalZip).css('background-color','yellow');
+      }
+      $('#surname').focus();
+    }
+  }
+  $('#pat_memberentrygen #btnScanPhotoID').on('click', function() {
+    var TimerActive = 0; //Reset timer
+    var ScanActive = 0;
+    $('#inputPhotoIDData').val('');
+    $('#msgScan').html('<h4>Scan Photo ID now...</h4>');
+    $('#PhotoIDModal').modal('show');
+    $('#PhotoIDModal').on('shown.bs.modal', function () {
+      $('#inputPhotoIDData').focus();
+      $('#inputPhotoIDData').unbind();
+      $('#inputPhotoIDData').keydown(function(event){
+        var code = (event.keyCode || event.which);
+        if(event.keyCode == 13) {
+          event.preventDefault();
+          return false;
+        }
+        if (code == 120) { //Disable F9 so Firefox doesn't launch reader
+          return false;
+        }
+      });
+      $('#inputPhotoIDData').on('keyup', function() {
+        if (ScanActive == 0) { //Set Processing Message
+          $('#msgScan').html('<center><h4>Processing...  please wait.</h4><svg xmlns="http://www.w3.org/2000/svg" width="50px" height="50px" viewBox="0 0 105 105" fill="#000"><circle cx="12.5" cy="12.5" r="12.5"><animate attributeName="fill-opacity" begin="0s" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="12.5" cy="52.5" r="12.5" fill-opacity=".5"><animate attributeName="fill-opacity" begin="100ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="52.5" cy="12.5" r="12.5"><animate attributeName="fill-opacity" begin="300ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="52.5" cy="52.5" r="12.5"><animate attributeName="fill-opacity" begin="600ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="92.5" cy="12.5" r="12.5"><animate attributeName="fill-opacity" begin="800ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="92.5" cy="52.5" r="12.5"><animate attributeName="fill-opacity" begin="400ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="12.5" cy="92.5" r="12.5"><animate attributeName="fill-opacity" begin="700ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="52.5" cy="92.5" r="12.5"><animate attributeName="fill-opacity" begin="500ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle><circle cx="92.5" cy="92.5" r="12.5"><animate attributeName="fill-opacity" begin="200ms" dur="1s" values="1;.2;1" calcMode="linear" repeatCount="indefinite"/></circle></svg></center>');
+          //Processing Graphic from https://github.com/SamHerbert/SVG-Loaders/tree/master/svg-loaders
+          ScanActive = 1;
+        }
+        if (TimerActive == 0) {  //Time's up on input
+          TimerActive = 1;
+          setTimeout(function(){
+            console.log('Entire block of data: ');
+            console.log($('#inputPhotoIDData').val());
+            var checkStart = $('#inputPhotoIDData').val().startsWith('@'); //Check if beginning of barcode starts with @
+            if (checkStart) { //Was this a valid barcode?
+              ProcessPhotoID();
+            } else {
+              $('#msgScan').html('<center><h4>That doesn\'t look like a Photo ID.  Try again.</h4></center>');
+              $('#inputPhotoIDData').val('');
+              TimerActive = 0;
+              ScanActive = 0;
+            }
+          }, 5000);          
+        }
+        console.log(event.key);
+        //Convert to linefeed - ArrowDown for Honeywell 7580g / ArrowRight for Datalogic QD2430 / Alt for Zebra Symbol DS4308
+        if ((event.key == 'ArrowDown') || (event.key == 'ArrowRight') || (event.key == 'Alt') || (event.key == 'Enter')) {
+          $('#inputPhotoIDData').val($('#inputPhotoIDData').val() + '\n');
+        }
+      });
+    });
+  });
+  //END Import data from Photo ID
