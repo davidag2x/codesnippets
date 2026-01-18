@@ -18,8 +18,8 @@
     } 
     //Fix city names that are incomplete
     function FixCity(str) {
-      if (str == 'Lewisville') {
-        return 'Lewisville';
+      if (str == 'YOURCITY') {
+        return 'YOURCITY';
       } else {
         return str;
       }
